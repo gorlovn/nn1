@@ -43,8 +43,8 @@ def train(_nn=1000, _i_start=0, _n_epochs=100, _batch_size=10):
         loss = None
         for _i in range(0, _nn, _batch_size):
             _x_batch = _xt[_i:_i++_batch_size]
-            _y_pred = model(_x_batch)
-            _y_batch = _yt[_i:_i++_batch_size]
+            _y_pred = model(_x_batch.to(device))
+            _y_batch = _yt[_i:_i++_batch_size].to(device)
             loss = loss_fn(_y_pred, _y_batch)
             optimizer.zero_grad()
             loss.backward()
