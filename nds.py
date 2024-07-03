@@ -114,7 +114,7 @@ def construct_layers(_p_id, _dataset):
     _ol_dict = _data[1]
     _ol = [0] * DS_NN
     for _i, _val in _ol_dict.items():
-        _ol[_i] = _val
+        _ol[_i] = 1 if _val > 0 else 0
 
     return _il, _ol
 
@@ -152,8 +152,8 @@ def construct_training_data_set(_nn=500, _i_start=0):
         _x.append(_il)
         _y.append(_ol)
 
-    _xt = torch.tensor(_x)
-    _yt = torch.tensor(_y)
+    _xt = torch.tensor(_x, dtype=torch.float32)
+    _yt = torch.tensor(_y, dtype=torch.float32)
 
     _dur = (time.time() - _start) * 1000
     log.info(f"Duration: {_dur:.2f} ms")

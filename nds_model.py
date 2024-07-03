@@ -25,7 +25,6 @@ model = nn.Sequential(
 )
 
 
-
 def test_model():
     print(model)
 
