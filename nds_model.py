@@ -8,9 +8,9 @@ import torch.nn as nn
 
 DS_NN = int(os.environ.get('DS_NN', '14646'))
 
-NN1 = 256
-NN2 = 128
-NN3 = 512
+NN1 = 1024
+NN2 = 512
+NN3 = 2048
 
 model = nn.Sequential(
     nn.Linear(DS_NN, NN1),
