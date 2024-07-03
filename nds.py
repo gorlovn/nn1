@@ -12,6 +12,7 @@ import os
 import json
 import pickle
 import time
+from tqdm import tqdm
 
 import logging
 
@@ -57,8 +58,8 @@ def get_diagnosis_dict() -> dict:
                 log.warning(f"Error getting diagnosis dict from the {DS_DATA_PATH}: {_e}")
 
         if type(_diagnosis_dict) is dict:
-            _nn = len(_diagnosis_dict)
-            log.info(f"We have got {_nn} diagnosis codes from the {DS_DATA_PATH}")
+            DS_NN = len(_diagnosis_dict)
+            log.info(f"We have got {DS_NN} diagnosis codes from the {DS_DATA_PATH}")
 
             _diagnosis_dict_p = pickle.dumps(_diagnosis_dict)
             REDIS.set(REDIS_DS_KEY, _diagnosis_dict_p, ex=REDIS_TIME_TO_LIVE)
@@ -92,7 +93,7 @@ def construct_layers(_p_id, _dataset):
     """
 
     Конструируем слои для _i-го пациента в наборе данных
-    :param _i:
+    :param _p_id:
     :param _dataset:
     :return:
     """
@@ -116,6 +117,47 @@ def construct_layers(_p_id, _dataset):
         _ol[_i] = _val
 
     return _il, _ol
+
+
+def construct_training_data_set(_nn=500, _i_start=0):
+    """
+    Сформировать набор данных для тренировки сети
+    :param _nn: количество слоев
+    :param _i_start: с какого по счету пациента начинать
+
+    :return:
+    """
+    import torch
+
+    _start = time.time()
+    log.info("++++++++ Construct training data +++++++")
+    log.info("+++++ get_diagnosis_dict")
+    _ds_dict = get_diagnosis_dict()
+    log.info("+++++ load_dataset")
+    _dataset = load_dataset()
+
+    _p_ids = list(_dataset.keys())
+    _nn_p_ids = len(_p_ids)
+
+    _x = []
+    _y = []
+    _i_finish = _i_start + _nn
+    log.info(f"{_i_start}:{_i_finish}")
+    for _i in tqdm(range(_i_start, _i_finish)):
+        if _i > _nn_p_ids:
+            break
+
+        _p_id = _p_ids[_i]
+        _il, _ol = construct_layers(_p_id, _dataset)
+        _x.append(_il)
+        _y.append(_ol)
+
+    _xt = torch.tensor(_x)
+    _yt = torch.tensor(_y)
+
+    _dur = (time.time() - _start) * 1000
+    log.info(f"Duration: {_dur:.2f} ms")
+    return _xt, _yt
 
 
 def test_construct_layers(_i, _p_ids, _dataset):
@@ -151,6 +193,8 @@ def test_module():
         _p_ids = list(_dataset.keys())
         test_construct_layers(7, _p_ids, _dataset)
         test_construct_layers(113, _p_ids, _dataset)
+
+    _tds = construct_training_data_set(10)
 
     _dur = (time.time() - _start) * 1000
     log.info(f"Duration: {_dur:.2f} ms")
