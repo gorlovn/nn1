@@ -9,6 +9,7 @@ Created on Wen Jul 03 15:58 2024
 @author: gnv
 """
 import gc
+import time
 
 from tqdm import tqdm
 
@@ -54,7 +55,8 @@ def train(_nn=1000, _i_start=0, _n_epochs=100, _batch_size=10):
     loss_fn = nn.MSELoss()
     optimizer = optim.Adam(model.parameters(), lr=0.001)
 
-    for _epoch in tqdm(range(_n_epochs)):
+    _start = time.time()
+    for _epoch in range(_n_epochs):
         model.train()
         for _i in range(0, _nn, _batch_size):
             optimizer.zero_grad()
@@ -68,7 +70,17 @@ def train(_nn=1000, _i_start=0, _n_epochs=100, _batch_size=10):
             loss.backward()
             optimizer.step()
 
-        print(f'Finished epoch {_epoch}, latest loss {loss}')
+        # Validation loop (optional)
+        model.eval()  # Set the model to evaluation mode
+        val_loss = 0
+        with torch.no_grad():  # No need to track gradients for validation
+            for _i in range(_nn):
+                outputs = model(_xt[_i].to(device))
+                val_loss += loss_fn(outputs, _yt[_i].to(device)).item()
+
+        avg_val_loss = val_loss / _nn
+        _dur = (time.time() - _start)  # sec
+        print(f"{_dur:.2f}: Epoch {_epoch + 1}/{_n_epochs}, Validation Loss: {avg_val_loss:.4f}")
 
 
 if __name__ == "__main__":
