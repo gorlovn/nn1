@@ -12,17 +12,23 @@ NN1 = 1024
 NN2 = 512
 NN3 = 2048
 
-model = nn.Sequential(
-    nn.Linear(DS_NN, NN1),
-    nn.ReLU(),
-    nn.Linear(NN1, NN2),
-    nn.ReLU(),
-    nn.Linear(NN2, NN3),
-    nn.ReLU(),
-    nn.Linear(NN3, DS_NN),
+model0 = nn.Sequential(
+    nn.Linear(DS_NN, DS_NN),
     nn.ReLU(),
     nn.Sigmoid()
 )
+
+
+class IdentityModel(nn.Module):
+    def __init__(self, input_size):
+        super(IdentityModel, self).__init__()
+        self.linear = nn.Linear(input_size, input_size)
+
+    def forward(self, x):
+        return self.linear(x)
+
+
+model = IdentityModel(DS_NN)
 
 
 def test_model():
