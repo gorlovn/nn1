@@ -80,11 +80,13 @@ def train(_nn=1000, _i_start=0, _n_epochs=100, _batch_size=10):
                 _predict = model(_xt[_i].to(device))
                 _target = _yt[_i].to(device)
                 val_loss += loss_fn(_predict, _target).item()
-                acc += (_predict == _target).float().sum()
+                _cmp = (torch.round(_predict) == _target)
+                acc += _cmp.float().sum()
                 count += len(_target)
 
         avg_val_loss = val_loss / _nn
         _dur = (time.time() - _start)  # sec
+        acc /= count
         print(f"{_dur:.2f}: Epoch {_epoch + 1}/{_n_epochs}, Validation Loss: {avg_val_loss:.4f}, "
               f"Model accuracy: {acc*100:.2f}")
 
