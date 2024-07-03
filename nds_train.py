@@ -8,6 +8,7 @@ Created on Wen Jul 03 15:58 2024
 
 @author: gnv
 """
+import os
 import gc
 import time
 
@@ -28,6 +29,11 @@ if __name__ == "__main__":
     log = setup_logger('', '_nds_train.out', console_out=True)
 else:
     log = logging.getLogger(__name__)
+
+CWD = os.getcwd()
+DATA_PATH = os.path.join(CWD, 'data')
+MODEL_FILE = 'nds_model.dat'
+MODEL_PATH = os.path.join(DATA_PATH, MODEL_FILE)
 
 
 def clear_cuda_memory():
@@ -54,6 +60,10 @@ def train(_nn=1000, _i_start=0, _n_epochs=100, _batch_size=10):
 
     loss_fn = nn.MSELoss()
     optimizer = optim.Adam(model.parameters(), lr=0.001)
+
+    if os.path.isfile(MODEL_PATH):
+        model.load_state_dict(torch.load(MODEL_PATH))
+        log.info(f"Model was loaded from {MODEL_PATH}")
 
     _start = time.time()
     for _epoch in range(_n_epochs):
@@ -90,7 +100,24 @@ def train(_nn=1000, _i_start=0, _n_epochs=100, _batch_size=10):
         print(f"{_dur:.2f}: Epoch {_epoch + 1}/{_n_epochs}, Validation Loss: {avg_val_loss:.4f}, "
               f"Model accuracy: {acc*100:.2f}")
 
+        torch.save(model.state_dict(), MODEL_PATH)
+        log.info(f"Model was saved to {MODEL_PATH}")
+
 
 if __name__ == "__main__":
+    import sys
 
-    train()
+    nn_to_train = 1000
+    i_start = 0
+    n_epochs = 100
+    n_args = len(sys.argv)
+    if n_args > 1:
+        nn_to_train = int(sys.argv[1])
+        if n_args > 2:
+            i_start = int(sys.argv[2])
+            if n_args > 3:
+                n_epochs = int(sys.argv[3])
+
+    train(nn_to_train, i_start, n_epochs)
+
+    sys.exit(0)
