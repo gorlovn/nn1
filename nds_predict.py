@@ -121,7 +121,13 @@ def main(_p_id):
         clear_cuda_memory()
 
     device = torch.device(device_name)
-    model.to(device)
+    try:
+        model.to(device)
+    except torch.cuda.OutOfMemoryError:
+        log.warning("CUDA out of memory. Use CPU.")
+        device_name = 'cpu'
+        device = torch.device(device_name)
+        model.to(device)
 
     log.info(f"+++++ Load NDS model to the {device_name}")
 
