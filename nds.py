@@ -16,8 +16,8 @@ from tqdm import tqdm
 
 import logging
 
-from slib.utils import setup_logger
-from slib.redis_utils import REDIS
+from helpers import setup_logger
+from helpers import REDIS
 
 CWD = os.getcwd()
 DATA_PATH = os.path.join(CWD, 'data')
@@ -37,7 +37,7 @@ else:
     log = logging.getLogger(__name__)
 
 
-def get_diagnosis_dict() -> dict:
+def get_diagnosis_dict():
     global DS_NN
 
     _diagnosis_dict_p = REDIS.get(REDIS_DS_KEY)
@@ -135,7 +135,7 @@ def construct_training_data_set(_nn=500, _i_start=0):
     _ds_dict = get_diagnosis_dict()
     if _ds_dict is None:
         return None, None
-    
+
     log.info("+++++ load_dataset")
     _dataset = load_dataset()
 

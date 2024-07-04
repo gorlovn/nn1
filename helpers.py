@@ -6,7 +6,8 @@ Created on Thu Jul 04 09:18 2024
 @author: gnv
 """
 
-import os, sys
+import os
+import redis
 
 import logging
 from logging.handlers import RotatingFileHandler
@@ -14,6 +15,14 @@ from logging.handlers import RotatingFileHandler
 CWD = os.getcwd()
 LOG_PATH = os.path.join(CWD, 'log')
 LOG_FORMATTER = logging.Formatter('%(asctime)s %(levelname)s %(message)s')  # include timestamp
+
+REDIS_ADDRESS = os.environ.get('REDIS_ADDRESS', 'localhost:6379')
+r_arr = REDIS_ADDRESS.split(':')
+REDIS_HOST = r_arr[0]
+REDIS_PORT = int(r_arr[1])
+
+# соединение с сервером REDIS
+REDIS = redis.Redis(host=REDIS_HOST, port=REDIS_PORT)
 
 
 def setup_logger(logger_name, log_file, log_path=LOG_PATH, level=logging.INFO, console_out=False):
@@ -40,3 +49,10 @@ def setup_logger(logger_name, log_file, log_path=LOG_PATH, level=logging.INFO, c
         logger.addHandler(console)
 
     return logger
+
+
+if __name__ == "__main__":
+    log = setup_logger('', '_helpers.out', console_out=True)
+else:
+    log = logging.getLogger(__name__)
+
