@@ -44,6 +44,20 @@ def clear_cuda_memory():
     log.info("CUDA memory has been cleared")
 
 
+def train_step(_xt, _yt, _i,
+               _batch_size, optimizer, loss_fn,
+               device):
+
+    _x_batch = _xt[_i:_i + +_batch_size]
+    _y_pred = model(_x_batch.to(device))
+    _y_batch = _yt[_i:_i + +_batch_size].to(device)
+
+    loss = loss_fn(_y_pred, _y_batch)
+    optimizer.zero_grad()
+    loss.backward()
+    optimizer.step()
+
+
 def train(_nn=1000, _i_start=0, _n_epochs=100, _batch_size=10):
 
     device_name = "cuda:0" if torch.cuda.is_available() else "cpu"
@@ -75,16 +89,14 @@ def train(_nn=1000, _i_start=0, _n_epochs=100, _batch_size=10):
     for _epoch in range(_n_epochs):
         model.train()
         for _i in range(0, _nn, _batch_size):
-            optimizer.zero_grad()
-
-            _x_batch = _xt[_i:_i++_batch_size]
-            _y_pred = model(_x_batch.to(device))
-            _y_batch = _yt[_i:_i++_batch_size].to(device)
-
-            loss = loss_fn(_y_pred, _y_batch)
-
-            loss.backward()
-            optimizer.step()
+            try:
+                train_step(_xt, _yt, _i, _batch_size, optimizer, loss_fn, device)
+            except torch.cuda.OutOfMemoryError:
+                log.warning("Train step CUDA out of memory. Use CPU.")
+                device_name = 'cpu'
+                device = torch.device(device_name)
+                model.to(device)
+                train_step(_xt, _yt, _i, _batch_size, optimizer, loss_fn, device)
 
         # Validation loop (optional)
         model.eval()  # Set the model to evaluation mode
