@@ -124,7 +124,6 @@ def construct_training_data_set(_nn=500, _i_start=0):
     Сформировать набор данных для тренировки сети
     :param _nn: количество слоев
     :param _i_start: с какого по счету пациента начинать
-    :param _device:
 
     :return:
     """
@@ -134,6 +133,9 @@ def construct_training_data_set(_nn=500, _i_start=0):
     log.info("++++++++ Construct training data +++++++")
     log.info("+++++ get_diagnosis_dict")
     _ds_dict = get_diagnosis_dict()
+    if _ds_dict is None:
+        return None, None
+    
     log.info("+++++ load_dataset")
     _dataset = load_dataset()
 

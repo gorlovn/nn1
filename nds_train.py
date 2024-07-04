@@ -12,15 +12,13 @@ import os
 import gc
 import time
 
-from tqdm import tqdm
-
 import torch
 import torch.nn as nn
 import torch.optim as optim
 
 import logging
 
-from slib.utils import setup_logger
+from helpers import setup_logger
 
 from nds import construct_training_data_set
 from nds_model import model
@@ -62,8 +60,16 @@ def train(_nn=1000, _i_start=0, _n_epochs=100, _batch_size=10):
     optimizer = optim.Adam(model.parameters(), lr=0.001)
 
     if os.path.isfile(MODEL_PATH):
-        model.load_state_dict(torch.load(MODEL_PATH))
-        log.info(f"Model was loaded from {MODEL_PATH}")
+        try:
+            model.load_state_dict(torch.load(MODEL_PATH))
+        except torch.cuda.OutOfMemoryError:
+            log.warning("CUDA out of memory. Use CPU.")
+            device_name = 'cpu'
+            device = torch.device(device_name)
+            model.to(device)
+            model.load_state_dict(torch.load(MODEL_PATH))
+
+        log.info(f"Model was loaded from the {MODEL_PATH}")
 
     _start = time.time()
     for _epoch in range(_n_epochs):
@@ -101,7 +107,7 @@ def train(_nn=1000, _i_start=0, _n_epochs=100, _batch_size=10):
               f"Model accuracy: {acc*100:.2f}")
 
         torch.save(model.state_dict(), MODEL_PATH)
-        log.info(f"Model was saved to {MODEL_PATH}")
+        log.info(f"Model was saved to the {MODEL_PATH}")
 
 
 if __name__ == "__main__":
@@ -109,7 +115,7 @@ if __name__ == "__main__":
 
     nn_to_train = 1000
     i_start = 0
-    n_epochs = 100
+    n_epochs = 3
     n_args = len(sys.argv)
     if n_args > 1:
         nn_to_train = int(sys.argv[1])
