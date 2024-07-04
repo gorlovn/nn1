@@ -44,16 +44,18 @@ def clear_cuda_memory():
     log.info("CUDA memory has been cleared")
 
 
-def train_step(_xt, _yt, _i,
-               _batch_size, optimizer, loss_fn,
+def train_step(_xt, _yt, _i, _batch_size,
+               optimizer, loss_fn,
                device):
+    # zero the parameter gradients
+    optimizer.zero_grad()
 
     _x_batch = _xt[_i:_i + +_batch_size]
-    _y_pred = model(_x_batch.to(device))
     _y_batch = _yt[_i:_i + +_batch_size].to(device)
 
+    # forward + backward + optimize
+    _y_pred = model(_x_batch.to(device))
     loss = loss_fn(_y_pred, _y_batch)
-    optimizer.zero_grad()
     loss.backward()
     optimizer.step()
 
@@ -92,7 +94,7 @@ def train(_nn=1000, _i_start=0, _n_epochs=100, _batch_size=10):
             try:
                 train_step(_xt, _yt, _i, _batch_size, optimizer, loss_fn, device)
             except torch.cuda.OutOfMemoryError:
-                log.warning("Train step CUDA out of memory. Use CPU.")
+                log.warning("Train step: CUDA out of memory. Use CPU.")
                 device_name = 'cpu'
                 device = torch.device(device_name)
                 model.to(device)
@@ -115,8 +117,8 @@ def train(_nn=1000, _i_start=0, _n_epochs=100, _batch_size=10):
         avg_val_loss = val_loss / _nn
         _dur = (time.time() - _start)  # sec
         acc /= count
-        print(f"{_dur:.2f}: Epoch {_epoch + 1}/{_n_epochs}, Validation Loss: {avg_val_loss:.4f}, "
-              f"Model accuracy: {acc*100:.2f}")
+        log.info(f"{_dur:.2f}: Epoch {_epoch + 1}/{_n_epochs}, Validation Loss: {avg_val_loss:.4f}, "
+                 f"Model accuracy: {acc*100:.2f}")
 
         torch.save(model.state_dict(), MODEL_PATH)
         log.info(f"Model was saved to the {MODEL_PATH}")
