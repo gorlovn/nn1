@@ -16,7 +16,7 @@ os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 model = Sequential()
 
 # Add the input layer
-model.add(Dense(units=DS_NN, activation='relu', input_dim=DS_NN))
+model.add(Dense(units=DS_NN, activation='relu', input_shape=(DS_NN, )))
 
 # Add the output layer
 model.add(Dense(units=DS_NN, activation='sigmoid'))
