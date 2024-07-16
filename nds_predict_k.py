@@ -66,14 +66,14 @@ def main(_p_id):
         log.error(f"Model data file {MODEL_PATH} was not found")
         return None
 
-    _input = np.array(_il, dtype=np.float32)
+    _input = np.array([_il], dtype=np.float32)
     _r_list = w_model.predict(_input)
 
-    _nn = len(_r_list)
+    _nn = len(_r_list[0])
     log.info("Prediction:")
     _r_ds = []
     for _i in range(_nn):
-        if _r_list[_i] > 0.5:
+        if _r_list[0][_i] > 0.5:
             _ds = _ds_keys[_i]
             _r_ds.append(_ds)
             log.info(f"{_ds}")
