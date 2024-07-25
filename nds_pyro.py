@@ -14,6 +14,7 @@ import logging
 
 import Pyro5.api
 
+from settings import PYRO_EXPOSE_ADDRESS
 from helpers import setup_logger
 from nds_predict_k import load_k_model
 from nds_predict_k import main
@@ -37,8 +38,9 @@ class NdsPredict(object):
         return _r
 
 
+log.info(f"PYRO_EXPOSE_ADDRESS: {PYRO_EXPOSE_ADDRESS}")
 # make a Pyro daemon
-daemon = Pyro5.api.Daemon()
+daemon = Pyro5.api.Daemon(host=PYRO_EXPOSE_ADDRESS)
 # register the nds predict as a Pyro object
 uri = daemon.register(NdsPredict)
 
