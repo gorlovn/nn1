@@ -43,6 +43,7 @@ REDIS_EX = int(os.environ.get('KERAS_MODEL_REDIS_EX', '1800'))
 RAM_DATA_PATH = '/tmp/ramdisk'
 RAM_MODEL_PATH = os.path.join(RAM_DATA_PATH, MODEL_FILE)
 
+PYRO_NS_SERVER = NN1_SETTINGS.get('pyro_ns_server', '127.0.0.1')
 PYRO_EXPOSE_ADDRESS = NN1_SETTINGS.get('pyro_expose_address', '127.0.0.1')
 
 

@@ -14,6 +14,7 @@ import logging
 
 import Pyro5.api
 
+from settings import PYRO_NS_SERVER
 from settings import PYRO_EXPOSE_ADDRESS
 from helpers import setup_logger
 from nds_predict_k import load_k_model
@@ -45,7 +46,7 @@ daemon = Pyro5.api.Daemon(host=PYRO_EXPOSE_ADDRESS)
 uri = daemon.register(NdsPredict)
 
 # Locate the name server
-ns = Pyro5.api.locate_ns()
+ns = Pyro5.api.locate_ns(PYRO_NS_SERVER)
 
 # Register your object with the name server
 ns.register("NdsPredict", uri)
