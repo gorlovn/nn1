@@ -17,6 +17,9 @@ from tensorflow.keras.models import load_model
 
 import logging
 
+from slib.slib_config import JSONRPC_DBMIS_API_URI
+from slib.m_utils import dbmis_api_execute
+
 from settings import MODEL_PATH
 from settings import RAM_MODEL_PATH
 from helpers import setup_logger
@@ -24,12 +27,69 @@ from helpers import setup_logger
 from nds import get_diagnosis_dict
 from nds_train_k import init_device
 
-from nds_predict import get_input_layer_dd, get_output_layer_ce
-
 if __name__ == "__main__":
     log = setup_logger('', '_nds_predict_k.out', console_out=True)
 else:
     log = logging.getLogger(__name__)
+
+# Список диагнозов пациента из ЛУД
+SQLT_GET_DD_DIAGNOSES = "SELECT TRIM(diagnosis_id_fk) FROM disease_diagnosis WHERE people_id_fk = ?;"
+
+# Список диагнозов пациента из ДН
+SQLT_GET_CE_DIAGNOSES = ("SELECT TRIM(diagnosis_id_fk) FROM clinical_examinations WHERE people_id_fk = ? "
+                         "and diagnosis_id_fk is not null;")
+
+
+def get_input_layer_dd(_p_id, _ds_dict) -> dict:
+    """
+    Сформировать input layer для пациента с ИД _p_id
+    на основании диагнозов ЛУД (disease_diagnosis)
+
+    Возвращаем словарь с ненулевыми значениями входного слоя
+    """
+
+    _rs = dbmis_api_execute(SQLT_GET_DD_DIAGNOSES, [_p_id], True)
+
+    if type(_rs) is list:
+        _il = {}
+        for _r in _rs:
+            _ds = _r[0]
+            _i = _ds_dict.get(_ds)
+            if _i in _il:
+                _il[_i] += 1
+            else:
+                _il[_i] = 1
+
+        return _il
+
+    log.warning(f"Wrong result getting dd input layer for patient {_p_id} over {JSONRPC_DBMIS_API_URI}: {_rs}")
+    return {}
+
+
+def get_output_layer_ce(_p_id, _ds_dict) -> dict:
+    """
+    Сформировать output layer для пациента с ИД _p_id
+    на основании диагнозов таблицы ДН (clinincal_examinations)
+
+    Возвращаем словарь с ненулевыми значениями входного слоя
+    """
+
+    _rs = dbmis_api_execute(SQLT_GET_CE_DIAGNOSES, [_p_id], True)
+
+    if type(_rs) is list:
+        _ol = {}
+        for _r in _rs:
+            _ds = _r[0]
+            _i = _ds_dict.get(_ds)
+            if _i in _ol:
+                _ol[_i] += 1
+            else:
+                _ol[_i] = 1
+
+        return _ol
+
+    log.warning(f"Wrong result getting ce output layer for patient {_p_id} over {JSONRPC_DBMIS_API_URI}: {_rs}")
+    return {}
 
 
 def load_k_model(_ram_model_path=RAM_MODEL_PATH, _model_path=MODEL_PATH):
