@@ -19,3 +19,5 @@ numpy~=1.26.4
 #tensorflow~=2.17.0
 tensorflow[and-cuda]
 keras
+
+Pyro5
